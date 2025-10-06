@@ -8,154 +8,165 @@
     <!-- TensorFlow.js & tfjs-vis CDNs -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@latest"></script>
-
-    <!-- Link to app.js (logic) -->
     <script defer src="app.js"></script>
 
     <style>
-        /* Basic responsive styling */
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
             color: #222;
-            background: #fbfbfd;
+            background-color: #fafafa;
         }
         .container {
             max-width: 1100px;
-            margin: 0 auto;
+            margin: auto;
         }
-        h1, h2 { color: #1a73e8; margin-top: 0; }
+        h1, h2 {
+            color: #1a73e8;
+        }
         section {
             background: #fff;
-            border: 1px solid #e6e9ee;
-            border-radius: 8px;
             padding: 16px;
-            margin-bottom: 18px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
         }
         button {
             background-color: #1a73e8;
             color: white;
             padding: 10px 14px;
-            margin: 6px 4px 6px 0;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
+            margin: 5px 0;
         }
-        button:disabled { background: #cfcfcf; cursor: not-allowed; color: #666; }
-        input[type="file"] { margin: 8px 0; }
-        .data-preview { overflow-x: auto; margin-top: 8px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #e6e9ee; padding: 8px; text-align: left; }
-        th { background: #f5f7fb; }
-        .note { background: #f8f9fb; border-left: 4px solid #1a73e8; padding: 12px; border-radius: 4px; }
-        .metrics-container { display:flex; gap: 12px; flex-wrap:wrap; }
-        .metric-card { min-width: 220px; border:1px solid #eee; padding: 10px; border-radius: 6px; background:#fafafa; }
-        .slider { width:100%; }
-        @media (max-width: 720px) {
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input[type="file"] {
+            margin: 5px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 8px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background: #f0f0f0;
+        }
+        .metrics-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .metric-card {
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 6px;
+            background: #f9f9f9;
+            flex: 1;
+            min-width: 240px;
+        }
+        @media (max-width: 700px) {
             .metrics-container { flex-direction: column; }
+        }
+        .note {
+            background: #f8f9fa;
+            padding: 10px;
+            border-left: 4px solid #1a73e8;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Titanic Survival Classifier (TensorFlow.js)</h1>
+<div class="container">
+    <h1>Titanic Survival Classifier (TensorFlow.js)</h1>
 
-        <section id="data-load">
-            <h2>1. Data Load</h2>
-            <p>Upload <strong>train.csv</strong> and <strong>test.csv</strong> from Kaggle Titanic dataset.</p>
-            <div>
-                <label for="train-file">Training Data (train.csv):</label><br/>
-                <input id="train-file" type="file" accept=".csv" />
+    <section id="data-load">
+        <h2>1. Data Load</h2>
+        <p>Upload <strong>train.csv</strong> and <strong>test.csv</strong> from the Kaggle Titanic dataset.</p>
+        <label>Training Data (train.csv):</label>
+        <input type="file" id="train-file" accept=".csv"><br>
+        <label>Test Data (test.csv):</label>
+        <input type="file" id="test-file" accept=".csv"><br>
+        <button onclick="loadData()">Load Data</button>
+        <div id="data-status"></div>
+    </section>
+
+    <section id="inspect">
+        <h2>2. Data Inspection</h2>
+        <button id="inspect-btn" onclick="inspectData()" disabled>Inspect Data</button>
+        <div id="data-preview"></div>
+        <div id="data-stats"></div>
+    </section>
+
+    <section id="preprocessing">
+        <h2>3. Preprocessing</h2>
+        <button id="preprocess-btn" onclick="preprocessData()" disabled>Preprocess Data</button>
+        <div>
+            <label><input type="checkbox" id="add-family-features" checked> Add Family Features</label>
+        </div>
+        <div id="preprocessing-output"></div>
+    </section>
+
+    <section id="model">
+        <h2>4. Model Setup</h2>
+        <button id="create-model-btn" onclick="createModel()" disabled>Create Model</button>
+        <div id="model-summary"></div>
+    </section>
+
+    <section id="training">
+        <h2>5. Training</h2>
+        <button id="train-btn" onclick="trainModel()" disabled>Train Model</button>
+        <div id="training-status"></div>
+    </section>
+
+    <section id="metrics">
+        <h2>6. Evaluation Metrics</h2>
+        <label>Threshold: <span id="threshold-value">0.50</span></label>
+        <input type="range" id="threshold-slider" min="0" max="1" step="0.01" value="0.5" disabled>
+        <div class="metrics-container">
+            <div class="metric-card">
+                <h3>Confusion Matrix</h3>
+                <div id="confusion-matrix"></div>
             </div>
-            <div>
-                <label for="test-file">Test Data (test.csv):</label><br/>
-                <input id="test-file" type="file" accept=".csv" />
+            <div class="metric-card">
+                <h3>Performance</h3>
+                <div id="performance-metrics"></div>
             </div>
-            <div style="margin-top:8px;">
-                <button id="load-data-btn" onclick="loadData()">Load Data</button>
-            </div>
-            <div id="data-status" style="margin-top:10px;"></div>
-        </section>
+        </div>
+    </section>
 
-        <section id="inspect">
-            <h2>2. Data Inspection</h2>
-            <button id="inspect-btn" onclick="inspectData()" disabled>Inspect Data</button>
-            <div id="data-preview" class="data-preview"></div>
-            <div id="data-stats"></div>
-            <div id="charts" style="margin-top:8px;"></div>
-        </section>
+    <section id="prediction">
+        <h2>7. Prediction</h2>
+        <button id="predict-btn" onclick="predict()" disabled>Predict Test Data</button>
+        <div id="prediction-output"></div>
+    </section>
 
-        <section id="preprocessing">
-            <h2>3. Preprocessing</h2>
-            <button id="preprocess-btn" onclick="preprocessData()" disabled>Preprocess Data</button>
-            <div style="margin-top:8px;">
-                <label><input type="checkbox" id="add-family-features" checked /> Add Family Features (FamilySize, IsAlone)</label>
-            </div>
-            <div id="preprocessing-output" style="margin-top:8px;"></div>
-            <div class="note" style="margin-top:8px;">
-                <strong>Schema note:</strong> Target is <code>Survived</code>, ID is <code>PassengerId</code>. To reuse for another dataset, update schema constants inside <code>app.js</code>.
-            </div>
-        </section>
+    <section id="export">
+        <h2>8. Export</h2>
+        <button id="export-btn" onclick="exportResults()" disabled>Export & Save Model</button>
+        <div id="export-status"></div>
+    </section>
 
-        <section id="model">
-            <h2>4. Model Setup</h2>
-            <button id="create-model-btn" onclick="createModel()" disabled>Create Model</button>
-            <div id="model-summary" style="margin-top:8px;"></div>
-        </section>
-
-        <section id="training">
-            <h2>5. Training</h2>
-            <button id="train-btn" onclick="trainModel()" disabled>Train Model</button>
-            <div id="training-status" style="margin-top:8px;"></div>
-            <div id="training-vis" style="margin-top:8px;"></div>
-        </section>
-
-        <section id="metrics">
-            <h2>6. Evaluation & Metrics</h2>
-            <div>
-                <label for="threshold-slider">Threshold: <span id="threshold-value">0.50</span></label>
-                <input id="threshold-slider" class="slider" type="range" min="0" max="1" step="0.01" value="0.5" disabled />
-            </div>
-            <div class="metrics-container" style="margin-top:10px;">
-                <div class="metric-card">
-                    <h3>Confusion Matrix</h3>
-                    <div id="confusion-matrix"></div>
-                </div>
-                <div class="metric-card">
-                    <h3>Performance</h3>
-                    <div id="performance-metrics"></div>
-                </div>
-            </div>
-            <div id="roc-note" style="margin-top:8px;">ROC & AUC are displayed in tfjs-vis visor (bottom-right button).</div>
-        </section>
-
-        <section id="prediction">
-            <h2>7. Prediction</h2>
-            <button id="predict-btn" onclick="predict()" disabled>Predict on Test Data</button>
-            <div id="prediction-output" style="margin-top:8px;"></div>
-        </section>
-
-        <section id="export">
-            <h2>8. Export</h2>
-            <button id="export-btn" onclick="exportResults()" disabled>Export Results & Save Model</button>
-            <div id="export-status" style="margin-top:8px;"></div>
-        </section>
-
-        <section id="deployment">
-            <h2>Deployment Notes</h2>
-            <div class="note">
-                <p>To deploy on GitHub Pages:</p>
-                <ol>
-                    <li>Create a public GitHub repo</li>
-                    <li>Commit <code>index.html</code> and <code>app.js</code></li>
-                    <li>Enable Pages (main branch, root folder)</li>
-                    <li>Visit <code>https://&lt;username&gt;.github.io/&lt;repo&gt;</code> after publishing</li>
-                </ol>
-            </div>
-        </section>
-    </div>
+    <section id="deployment">
+        <h2>Deployment Notes</h2>
+        <div class="note">
+            <p>To deploy this web app:</p>
+            <ol>
+                <li>Create a public GitHub repository.</li>
+                <li>Upload <code>index.html</code> and <code>app.js</code>.</li>
+                <li>Enable GitHub Pages from repository settings (main branch, root folder).</li>
+                <li>Access it at <code>https://your-username.github.io/repo-name</code>.</li>
+            </ol>
+        </div>
+    </section>
+</div>
 </body>
 </html>
