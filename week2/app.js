@@ -287,7 +287,7 @@ function preprocessData() {
     const fareMedian = fares.length > 0 ? fares.reduce((a, b) => a + b) / fares.length : 32;
     steps.push(`   - Fare: imputed ${trainData.filter(p => !p.Fare || p.Fare === '').length} missing values with median (${fareMedian.toFixed(2)})`);
     
-    // Step 2: Create new features (optional)
+    // Step 2: Create new features (optional) - COMMENT OUT if you don't want these features
     steps.push('2. Creating new features:');
     steps.push('   - FamilySize = SibSp + Parch + 1');
     steps.push('   - IsAlone = 1 if FamilySize == 1, else 0');
@@ -312,7 +312,7 @@ function preprocessData() {
         processed.SibSp = parseInt(passenger.SibSp);
         processed.Parch = parseInt(passenger.Parch);
         
-        // New features
+        // New features - COMMENT OUT THE NEXT 2 LINES if you don't want these features
         processed.FamilySize = processed.SibSp + processed.Parch + 1;
         processed.IsAlone = processed.FamilySize === 1 ? 1 : 0;
         
@@ -326,7 +326,8 @@ function preprocessData() {
     steps.push(`   - Final training samples: ${processedData.length}`);
     
     // Step 4: Calculate standardization parameters
-    const numericFeatures = ['Age', 'Fare', 'FamilySize'];
+    // Update this array based on which features you include
+    const numericFeatures = ['Age', 'Fare']; // Remove 'FamilySize' if not using it
     const standardizationParams = {};
     
     numericFeatures.forEach(feature => {
@@ -355,7 +356,8 @@ function preprocessData() {
         embarkedMode,
         fareMedian,
         standardizationParams,
-        categoricalFeatures
+        categoricalFeatures,
+        useFamilyFeatures: true // Set to false if not using FamilySize and IsAlone
     };
     
     window.processedTrainData = processedData;
@@ -390,14 +392,23 @@ function buildModel() {
     const summaryDiv = document.getElementById('model-summary');
     summaryDiv.innerHTML = '<h3>Model Architecture:</h3>';
     
+    // Calculate input shape based on features used
+    // Base features: Pclass(3) + Sex(2) + Age(1) + SibSp(1) + Parch(1) + Fare(1) + Embarked(3) = 12
+    let inputShape = 12;
+    
+    // Add FamilySize and IsAlone if used (2 more features)
+    if (window.preprocessingParams.useFamilyFeatures) {
+        inputShape += 2; // Total becomes 14
+    }
+    
     // Create sequential model
     model = tf.sequential();
     
-    // Add layers
+    // Add layers with correct input shape
     model.add(tf.layers.dense({
         units: 16,
         activation: 'relu',
-        inputShape: [11] // Pclass(3) + Sex(2) + Age(1) + SibSp(1) + Parch(1) + Fare(1) + Embarked(3) = 11
+        inputShape: [inputShape]
     }));
     
     model.add(tf.layers.dense({
@@ -421,6 +432,8 @@ function buildModel() {
     pre.style.padding = '10px';
     pre.textContent = modelSummary.join('\n');
     summaryDiv.appendChild(pre);
+    
+    summaryDiv.innerHTML += `<p><strong>Input shape: [${inputShape}] - Adjust if you change feature selection</strong></p>`;
 }
 
 // Training
@@ -527,6 +540,21 @@ function prepareFeaturesAndLabels(data) {
         if (embarkedIndex !== -1) embarkedOneHot[embarkedIndex] = 1;
         featureVector.push(...embarkedOneHot);
         
+        // Add FamilySize and IsAlone if using them
+        if (params.useFamilyFeatures) {
+            // Standardize FamilySize
+            if (params.standardizationParams.FamilySize) {
+                const standardizedFamilySize = (passenger.FamilySize - params.standardizationParams.FamilySize.mean) / 
+                                            params.standardizationParams.FamilySize.std;
+                featureVector.push(standardizedFamilySize);
+            } else {
+                featureVector.push(passenger.FamilySize); // Use raw value if not standardized
+            }
+            
+            // IsAlone (binary, no standardization needed)
+            featureVector.push(passenger.IsAlone);
+        }
+        
         featuresArray.push(featureVector);
         labelsArray.push(passenger.Survived);
     });
@@ -558,10 +586,12 @@ function calculateMetrics() {
     
     // Display AUC
     const metricsDiv = document.getElementById('performance-metrics');
-    metricsDiv.innerHTML = `
-        <h3>Model Performance</h3>
-        <p><strong>AUC: ${rocData.auc.toFixed(4)}</strong></p>
-    `;
+    if (metricsDiv) {
+        metricsDiv.innerHTML = `
+            <h3>Model Performance</h3>
+            <p><strong>AUC: ${rocData.auc.toFixed(4)}</strong></p>
+        `;
+    }
     
     // Initial metrics with default threshold
     updateMetrics(0.5);
@@ -633,21 +663,25 @@ function updateMetrics(threshold) {
     
     // Update confusion matrix
     const confusionMatrixDiv = document.getElementById('confusion-matrix');
-    confusionMatrixDiv.innerHTML = `
-        <h3>Confusion Matrix (Threshold: ${threshold.toFixed(2)})</h3>
-        ${createTable(
-            ['', 'Predicted 0', 'Predicted 1'],
-            [
-                ['Actual 0', tn, fp],
-                ['Actual 1', fn, tp]
-            ]
-        ).outerHTML}
-    `;
+    if (confusionMatrixDiv) {
+        confusionMatrixDiv.innerHTML = `
+            <h3>Confusion Matrix (Threshold: ${threshold.toFixed(2)})</h3>
+            ${createTable(
+                ['', 'Predicted 0', 'Predicted 1'],
+                [
+                    ['Actual 0', tn, fp],
+                    ['Actual 1', fn, tp]
+                ]
+            ).outerHTML}
+        `;
+    }
     
     // Update performance metrics
     const performanceDiv = document.getElementById('performance-metrics');
     if (performanceDiv) {
-        performanceDiv.innerHTML += `
+        // Preserve AUC display
+        const aucDisplay = performanceDiv.querySelector('p') ? performanceDiv.querySelector('p').outerHTML : '';
+        performanceDiv.innerHTML = aucDisplay + `
             <h3>Performance Metrics</h3>
             ${createTable(
                 ['Metric', 'Value'],
@@ -701,9 +735,11 @@ async function predictTestData() {
         processed.Parch = parseInt(passenger.Parch);
         processed.PassengerId = passenger.PassengerId;
         
-        // New features
-        processed.FamilySize = processed.SibSp + processed.Parch + 1;
-        processed.IsAlone = processed.FamilySize === 1 ? 1 : 0;
+        // New features - only if using them
+        if (params.useFamilyFeatures) {
+            processed.FamilySize = processed.SibSp + processed.Parch + 1;
+            processed.IsAlone = processed.FamilySize === 1 ? 1 : 0;
+        }
         
         return processed;
     });
@@ -743,6 +779,21 @@ async function predictTestData() {
         const embarkedIndex = ['C', 'Q', 'S'].indexOf(passenger.Embarked);
         if (embarkedIndex !== -1) embarkedOneHot[embarkedIndex] = 1;
         featureVector.push(...embarkedOneHot);
+        
+        // Add FamilySize and IsAlone if using them
+        if (params.useFamilyFeatures) {
+            // FamilySize (standardize if parameters exist, otherwise use raw)
+            if (params.standardizationParams.FamilySize) {
+                const standardizedFamilySize = (passenger.FamilySize - params.standardizationParams.FamilySize.mean) / 
+                                            params.standardizationParams.FamilySize.std;
+                featureVector.push(standardizedFamilySize);
+            } else {
+                featureVector.push(passenger.FamilySize);
+            }
+            
+            // IsAlone (binary)
+            featureVector.push(passenger.IsAlone);
+        }
         
         return featureVector;
     });
@@ -850,12 +901,3 @@ function downloadCSV(content, filename) {
     a.click();
     document.body.removeChild(a);
 }
-
-// Initialize metrics display on load
-document.addEventListener('DOMContentLoaded', () => {
-    // Ensure evaluation tables are visible areas
-    const metricsSection = document.getElementById('metrics');
-    if (metricsSection) {
-        metricsSection.classList.remove('hidden');
-    }
-});
