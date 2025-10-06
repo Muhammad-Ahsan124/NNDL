@@ -1,85 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Titanic Survival Classifier - TensorFlow.js</title>
-  
-  <!-- TensorFlow.js + tfjs-vis -->
+
+  <!-- TensorFlow.js & tfjs-vis (as requested) -->
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@latest"></script>
 
-  <!-- ✅ PapaParse for robust CSV parsing -->
+  <!-- PapaParse for robust CSV parsing (handles quoted commas) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-  <!-- App logic -->
-  <script src="app.js"></script>
+  <!-- App logic (deferred so DOM exists) -->
+  <script defer src="app.js"></script>
 
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: #0077cc; }
-    section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
-    button { background: #0077cc; color: white; border: none; padding: 8px 15px; margin-top: 5px; cursor: pointer; border-radius: 4px; }
-    button:disabled { background: #999; cursor: not-allowed; }
-    table { border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 4px 8px; }
+    body { font-family: Arial, Helvetica, sans-serif; margin: 20px; color: #222; background:#fafbff; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { color: #0a6ebd; }
+    section { background: #fff; border: 1px solid #e3e7ee; padding: 14px; border-radius: 8px; margin-bottom: 18px; }
+    button { background: #0a6ebd; color: #fff; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; margin: 6px 6px 6px 0; }
+    button:disabled { background:#bdbdbd; cursor:not-allowed; }
+    input[type="file"] { margin: 6px 0 10px 0; }
+    .small { font-size: 0.9rem; color:#555; }
+    table { border-collapse: collapse; width: 100%; margin-top:8px; }
+    th, td { border: 1px solid #e6e9ef; padding: 6px 8px; text-align: left; }
+    th { background: #f5f8ff; }
+    .metrics { display:flex; gap:12px; flex-wrap:wrap; }
+    .metric-card { background:#fbfcff; border:1px solid #eef3fb; padding:10px; border-radius:6px; min-width:200px; }
+    .note { background:#f8f9fc; padding:8px; border-left:4px solid #0a6ebd; border-radius:4px; }
+    @media (max-width:720px){ .metrics{ flex-direction:column; } }
   </style>
 </head>
 <body>
-  <h1>Titanic Survival Classifier (TensorFlow.js)</h1>
+  <div class="container">
+    <h1>Titanic Survival Classifier (TensorFlow.js)</h1>
 
-  <!-- 1. Load Data -->
-  <section>
-    <h2>1. Load Data</h2>
-    <p>Upload <b>train.csv</b> and <b>test.csv</b>:</p>
-    <input type="file" id="train-file" accept=".csv" />
-    <input type="file" id="test-file" accept=".csv" />
-    <br/>
-    <button onclick="loadData()">Load Data</button>
-    <div id="data-status"></div>
-    <button id="inspect-btn" onclick="inspectData()" disabled>Inspect Data</button>
-    <div id="data-preview"></div>
-    <div id="data-stats"></div>
-    <div id="charts"></div>
-  </section>
+    <section id="section-load">
+      <h2>1. Data Load</h2>
+      <p class="small">Upload <strong>train.csv</strong> and <strong>test.csv</strong> (Kaggle Titanic format).</p>
 
-  <!-- 2. Preprocessing -->
-  <section>
-    <h2>2. Preprocessing</h2>
-    <button id="preprocess-btn" onclick="preprocessData()" disabled>Preprocess Data</button>
-    <br/>
-    <label><input type="checkbox" id="add-family-features" checked /> Add Family Features (FamilySize, IsAlone)</label>
-    <div id="preprocessing-output"></div>
-  </section>
+      <div>
+        <label>Training CSV: </label><br/>
+        <input id="train-file" type="file" accept=".csv" />
+      </div>
 
-  <!-- 3. Model -->
-  <section>
-    <h2>3. Model</h2>
-    <button id="create-model-btn" onclick="createModel()" disabled>Create Model</button>
-    <div id="model-summary"></div>
-    <button id="train-btn" onclick="trainModel()" disabled>Train Model</button>
-    <div id="training-status"></div>
-  </section>
+      <div>
+        <label>Test CSV: </label><br/>
+        <input id="test-file" type="file" accept=".csv" />
+      </div>
 
-  <!-- 4. Evaluation -->
-  <section>
-    <h2>4. Evaluation</h2>
-    <p>
-      Adjust threshold:
-      <input type="range" id="threshold-slider" min="0" max="1" step="0.01" value="0.5" disabled />
-      <span id="threshold-value">0.50</span>
-    </p>
-    <div id="confusion-matrix"></div>
-    <div id="performance-metrics"></div>
-  </section>
+      <div style="margin-top:8px;">
+        <button id="load-data-btn">Load Data</button>
+        <span id="data-status" class="small"></span>
+      </div>
+    </section>
 
-  <!-- 5. Prediction -->
-  <section>
-    <h2>5. Prediction</h2>
-    <button id="predict-btn" onclick="predict()" disabled>Predict on Test Data</button>
-    <div id="prediction-output"></div>
-    <button id="export-btn" onclick="exportResults()" disabled>Export Results</button>
-    <div id="export-status"></div>
-  </section>
+    <section id="section-inspect">
+      <h2>2. Data Inspection</h2>
+      <button id="inspect-btn" disabled>Inspect Data</button>
+      <div id="data-preview" style="margin-top:10px;"></div>
+      <div id="data-stats" style="margin-top:10px;"></div>
+    </section>
+
+    <section id="section-preprocess">
+      <h2>3. Preprocessing</h2>
+      <div style="margin-bottom:6px;">
+        <label><input id="add-family-features" type="checkbox" checked /> Add Family Features (FamilySize, IsAlone)</label>
+      </div>
+      <div>
+        <button id="preprocess-btn" disabled>Preprocess Data</button>
+        <div id="preprocessing-output" style="margin-top:8px;"></div>
+      </div>
+    </section>
+
+    <section id="section-model">
+      <h2>4. Model & Training</h2>
+      <div>
+        <button id="create-model-btn" disabled>Create Model</button>
+        <button id="train-btn" disabled>Train Model</button>
+        <div id="model-summary" style="margin-top:8px;"></div>
+        <div id="training-status" style="margin-top:8px;"></div>
+      </div>
+    </section>
+
+    <section id="section-eval">
+      <h2>5. Evaluation & Metrics</h2>
+      <div>
+        Threshold:
+        <input id="threshold-slider" type="range" min="0" max="1" step="0.01" value="0.5" disabled />
+        <span id="threshold-value">0.50</span>
+      </div>
+      <div class="metrics" style="margin-top:8px;">
+        <div class="metric-card">
+          <h4>Confusion Matrix</h4>
+          <div id="confusion-matrix"></div>
+        </div>
+        <div class="metric-card">
+          <h4>Performance</h4>
+          <div id="performance-metrics"></div>
+        </div>
+      </div>
+      <p class="small">ROC/AUC and training charts appear in the tfjs-vis visor (bottom-right).</p>
+    </section>
+
+    <section id="section-predict">
+      <h2>6. Prediction & Export</h2>
+      <div>
+        <button id="predict-btn" disabled>Predict Test Data</button>
+        <button id="export-btn" disabled>Export Results</button>
+        <button id="save-model-btn" disabled>Save Model</button>
+      </div>
+      <div id="prediction-output" style="margin-top:8px;"></div>
+      <div id="export-status" style="margin-top:8px;"></div>
+    </section>
+
+    <section id="section-deploy">
+      <h2>Deployment Note</h2>
+      <div class="note">
+        Commit <code>index.html</code> & <code>app.js</code> to a public GitHub repo and enable Pages (main/root).
+      </div>
+    </section>
+  </div>
 </body>
 </html>
