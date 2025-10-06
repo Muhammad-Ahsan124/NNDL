@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Titanic Survival Classifier - TensorFlow.js</title>
+  
+  <!-- TensorFlow.js + tfjs-vis -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@latest"></script>
+
+  <!-- ✅ PapaParse for robust CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <!-- App logic -->
+  <script src="app.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #0077cc; }
+    section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 6px; }
+    button { background: #0077cc; color: white; border: none; padding: 8px 15px; margin-top: 5px; cursor: pointer; border-radius: 4px; }
+    button:disabled { background: #999; cursor: not-allowed; }
+    table { border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 4px 8px; }
+  </style>
+</head>
+<body>
+  <h1>Titanic Survival Classifier (TensorFlow.js)</h1>
+
+  <!-- 1. Load Data -->
+  <section>
+    <h2>1. Load Data</h2>
+    <p>Upload <b>train.csv</b> and <b>test.csv</b>:</p>
+    <input type="file" id="train-file" accept=".csv" />
+    <input type="file" id="test-file" accept=".csv" />
+    <br/>
+    <button onclick="loadData()">Load Data</button>
+    <div id="data-status"></div>
+    <button id="inspect-btn" onclick="inspectData()" disabled>Inspect Data</button>
+    <div id="data-preview"></div>
+    <div id="data-stats"></div>
+    <div id="charts"></div>
+  </section>
+
+  <!-- 2. Preprocessing -->
+  <section>
+    <h2>2. Preprocessing</h2>
+    <button id="preprocess-btn" onclick="preprocessData()" disabled>Preprocess Data</button>
+    <br/>
+    <label><input type="checkbox" id="add-family-features" checked /> Add Family Features (FamilySize, IsAlone)</label>
+    <div id="preprocessing-output"></div>
+  </section>
+
+  <!-- 3. Model -->
+  <section>
+    <h2>3. Model</h2>
+    <button id="create-model-btn" onclick="createModel()" disabled>Create Model</button>
+    <div id="model-summary"></div>
+    <button id="train-btn" onclick="trainModel()" disabled>Train Model</button>
+    <div id="training-status"></div>
+  </section>
+
+  <!-- 4. Evaluation -->
+  <section>
+    <h2>4. Evaluation</h2>
+    <p>
+      Adjust threshold:
+      <input type="range" id="threshold-slider" min="0" max="1" step="0.01" value="0.5" disabled />
+      <span id="threshold-value">0.50</span>
+    </p>
+    <div id="confusion-matrix"></div>
+    <div id="performance-metrics"></div>
+  </section>
+
+  <!-- 5. Prediction -->
+  <section>
+    <h2>5. Prediction</h2>
+    <button id="predict-btn" onclick="predict()" disabled>Predict on Test Data</button>
+    <div id="prediction-output"></div>
+    <button id="export-btn" onclick="exportResults()" disabled>Export Results</button>
+    <div id="export-status"></div>
+  </section>
+</body>
+</html>
