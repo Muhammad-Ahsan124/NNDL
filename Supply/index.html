@@ -3,161 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Logistics Delay Predictor</title>
+    <title>Logistics Delay Predictor</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.15.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚚 Smart Logistics Delay Predictor</h1>
-            <p>AI-powered predictive maintenance for logistics optimization</p>
+            <h1>🚚 Logistics Delay Predictor</h1>
+            <p>Upload your dataset, explore insights, train models, and predict delays</p>
         </div>
 
-        <div class="card">
-            <h2>Real-time Delay Prediction</h2>
-            <p>Enter logistics data to predict potential delays:</p>
-            
-            <div class="input-grid">
-                <div class="form-group">
-                    <label>Asset ID:</label>
-                    <select id="assetId">
-                        <option value="Truck_1">Truck 1</option>
-                        <option value="Truck_2">Truck 2</option>
-                        <option value="Truck_3">Truck 3</option>
-                        <option value="Truck_4">Truck 4</option>
-                        <option value="Truck_5">Truck 5</option>
-                        <option value="Truck_6">Truck 6</option>
-                        <option value="Truck_7">Truck 7</option>
-                        <option value="Truck_8">Truck 8</option>
-                        <option value="Truck_9">Truck 9</option>
-                        <option value="Truck_10">Truck 10</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Latitude:</label>
-                    <input type="number" id="latitude" step="any" value="40.7128">
-                </div>
-                <div class="form-group">
-                    <label>Longitude:</label>
-                    <input type="number" id="longitude" step="any" value="-74.0060">
-                </div>
-                <div class="form-group">
-                    <label>Inventory Level:</label>
-                    <input type="number" id="inventory" value="350" min="0" max="500">
-                </div>
-                <div class="form-group">
-                    <label>Shipment Status:</label>
-                    <select id="shipmentStatus">
-                        <option value="0">In Transit</option>
-                        <option value="1">Delayed</option>
-                        <option value="2">Delivered</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Temperature (°C):</label>
-                    <input type="number" id="temperature" step="any" value="25.0" min="-50" max="50">
-                </div>
-                <div class="form-group">
-                    <label>Humidity (%):</label>
-                    <input type="number" id="humidity" step="any" value="65.0" min="0" max="100">
-                </div>
-                <div class="form-group">
-                    <label>Traffic Status:</label>
-                    <select id="trafficStatus">
-                        <option value="0">Clear</option>
-                        <option value="1">Heavy</option>
-                        <option value="2">Detour</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Waiting Time (min):</label>
-                    <input type="number" id="waitingTime" value="30" min="0" max="120">
-                </div>
-                <div class="form-group">
-                    <label>Transaction Amount:</label>
-                    <input type="number" id="transactionAmount" value="300" min="0" max="1000">
-                </div>
-                <div class="form-group">
-                    <label>Purchase Frequency:</label>
-                    <input type="number" id="purchaseFrequency" value="5" min="0" max="20">
-                </div>
-                <div class="form-group">
-                    <label>Delay Reason:</label>
-                    <select id="delayReason">
-                        <option value="0">None</option>
-                        <option value="1">Weather</option>
-                        <option value="2">Traffic</option>
-                        <option value="3">Mechanical Failure</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Asset Utilization (%):</label>
-                    <input type="number" id="assetUtilization" value="75.0" min="0" max="100" step="any">
-                </div>
-                <div class="form-group">
-                    <label>Demand Forecast:</label>
-                    <input type="number" id="demandForecast" value="250" min="0" max="500">
+        <!-- Step 1: Data Upload -->
+        <div class="card" id="uploadSection">
+            <h2>📁 Step 1: Upload Dataset</h2>
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                <div class="upload-placeholder" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📄</div>
+                    <p>Click to upload CSV file</p>
+                    <p class="upload-hint">Supported format: CSV with logistics data</p>
                 </div>
             </div>
-
-            <button class="btn" onclick="predictDelay()">Predict Delay Probability</button>
-            
-            <div id="loading" class="loading" style="display: none;">
-                <div class="spinner"></div>
-                <p>Analyzing logistics data...</p>
+            <div id="fileInfo" style="display: none; margin-top: 15px;">
+                <p><strong>File:</strong> <span id="fileName"></span></p>
+                <p><strong>Rows:</strong> <span id="rowCount"></span></p>
+                <button class="btn" onclick="loadDataset()">Load Dataset</button>
             </div>
+        </div>
 
-            <div id="result" class="result" style="display: none;">
+        <!-- Step 2: EDA -->
+        <div class="card" id="edaSection" style="display: none;">
+            <h2>📊 Step 2: Exploratory Data Analysis</h2>
+            <button class="btn" onclick="performEDA()">Show EDA</button>
+            <div class="charts-container" id="chartsContainer">
+                <div class="chart-wrapper">
+                    <canvas id="chart1"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart2"></canvas>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart3"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Model Training -->
+        <div class="card" id="trainingSection" style="display: none;">
+            <h2>🤖 Step 3: Train Model</h2>
+            <div class="training-controls">
+                <div class="form-group">
+                    <label>Select Model:</label>
+                    <select id="modelType">
+                        <option value="LSTM">LSTM</option>
+                        <option value="GRU">GRU</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Epochs:</label>
+                    <input type="number" id="epochs" value="50" min="10" max="200">
+                </div>
+                <div class="form-group">
+                    <label>Batch Size:</label>
+                    <input type="number" id="batchSize" value="32" min="16" max="128">
+                </div>
+                <button class="btn" onclick="trainModel()">Train Model</button>
+            </div>
+            <div id="trainingProgress" style="display: none;">
+                <h3>Training Progress</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">Epoch 0/50</p>
+                <div class="chart-wrapper">
+                    <canvas id="trainingChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Prediction -->
+        <div class="card" id="predictionSection" style="display: none;">
+            <h2>🔮 Step 4: Make Predictions</h2>
+            <div class="prediction-controls">
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label>Asset ID:</label>
+                        <select id="predAssetId"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Latitude:</label>
+                        <input type="number" id="predLatitude" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude:</label>
+                        <input type="number" id="predLongitude" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Inventory Level:</label>
+                        <input type="number" id="predInventory">
+                    </div>
+                    <div class="form-group">
+                        <label>Shipment Status:</label>
+                        <select id="predShipmentStatus">
+                            <option value="In Transit">In Transit</option>
+                            <option value="Delayed">Delayed</option>
+                            <option value="Delivered">Delivered</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Temperature (°C):</label>
+                        <input type="number" id="predTemperature" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Humidity (%):</label>
+                        <input type="number" id="predHumidity" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Traffic Status:</label>
+                        <select id="predTrafficStatus">
+                            <option value="Clear">Clear</option>
+                            <option value="Heavy">Heavy</option>
+                            <option value="Detour">Detour</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Waiting Time (min):</label>
+                        <input type="number" id="predWaitingTime">
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction Amount:</label>
+                        <input type="number" id="predTransactionAmount">
+                    </div>
+                    <div class="form-group">
+                        <label>Purchase Frequency:</label>
+                        <input type="number" id="predPurchaseFrequency">
+                    </div>
+                    <div class="form-group">
+                        <label>Delay Reason:</label>
+                        <select id="predDelayReason">
+                            <option value="None">None</option>
+                            <option value="Weather">Weather</option>
+                            <option value="Traffic">Traffic</option>
+                            <option value="Mechanical Failure">Mechanical Failure</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Asset Utilization (%):</label>
+                        <input type="number" id="predAssetUtilization" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Demand Forecast:</label>
+                        <input type="number" id="predDemandForecast">
+                    </div>
+                </div>
+                <button class="btn" onclick="makePrediction()">Predict Delay</button>
+            </div>
+            <div id="predictionResult" style="display: none; margin-top: 20px;">
                 <h3>Prediction Result</h3>
-                <div id="predictionText"></div>
-                <div id="confidence"></div>
+                <div id="resultContent"></div>
             </div>
         </div>
 
-        <div class="card">
-            <h2>📈 Business Value Dashboard</h2>
-            <div class="business-value">
-                <h3>💰 Financial Impact</h3>
-                <p>Our LSTM model predicts delays with 87% accuracy, enabling:</p>
-                <ul>
-                    <li><strong>Predictive Maintenance:</strong> Reduce downtime by 40%</li>
-                    <li><strong>Route Optimization:</strong> Save 15% on fuel costs</li>
-                    <li><strong>Inventory Management:</strong> Reduce stockouts by 25%</li>
-                    <li><strong>Customer Satisfaction:</strong> Improve on-time delivery by 35%</li>
-                </ul>
-            </div>
-
-            <div class="metrics">
-                <div class="metric-card">
-                    <div class="metric-value">87%</div>
-                    <div class="metric-label">Prediction Accuracy</div>
+        <!-- Step 5: Evaluation -->
+        <div class="card" id="evaluationSection" style="display: none;">
+            <h2>📈 Step 5: Model Evaluation</h2>
+            <button class="btn" onclick="evaluateModel()">Evaluate Model</button>
+            <div id="evaluationResults" style="display: none; margin-top: 20px;">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="accuracy">0%</div>
+                        <div class="metric-label">Accuracy</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="precision">0%</div>
+                        <div class="metric-label">Precision</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="recall">0%</div>
+                        <div class="metric-label">Recall</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="f1">0%</div>
+                        <div class="metric-label">F1-Score</div>
+                    </div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-value">$2.4M</div>
-                    <div class="metric-label">Annual Savings</div>
+                <div class="chart-wrapper">
+                    <canvas id="confusionMatrix"></canvas>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-value">35%</div>
-                    <div class="metric-label">Delay Reduction</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">94%</div>
-                    <div class="metric-label">Customer Satisfaction</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>📊 Model Performance</h2>
-            <div class="chart-container">
-                <canvas id="performanceChart"></canvas>
             </div>
         </div>
     </div>
 
-    <script src="data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
