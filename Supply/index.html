@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Smart Logistics LSTM (TF.js)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Smart Logistics — LSTM in the Browser</h1>
+    <div id="controls">
+      <button id="trainBtn">Train LSTM</button>
+      <button id="predictBtn" disabled>Run Prediction</button>
+      <div id="status">Ready.</div>
+    </div>
+    <canvas id="chart" width="900" height="400"></canvas>
+    <pre id="log"></pre>
+  </div>
+
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.13.0/dist/tf.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
