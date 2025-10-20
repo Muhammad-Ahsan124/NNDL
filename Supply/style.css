@@ -1,0 +1,9 @@
+
+body { font-family: Inter, system-ui, Arial; background:#f7fafc; color:#1f2937; margin:0; padding:20px; }
+.container { max-width:1000px; margin:0 auto; background:white; padding:20px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.06); }
+h1 { margin:0 0 12px 0; font-size:20px; }
+#controls { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+button { padding:8px 12px; border-radius:6px; border:1px solid #e2e8f0; background:#fff; cursor:pointer; }
+#status { font-size:14px; color:#6b7280; }
+#log { height:120px; overflow:auto; background:#0f172a; color:#e6edf3; padding:12px; border-radius:6px; }
+canvas { background:#ffffff; border-radius:6px; box-shadow:0 2px 8px rgba(2,6,23,0.04); }
