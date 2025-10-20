@@ -569,7 +569,7 @@
                 }, 1000);
             });
             
-            // Show EDA - Fixed implementation
+            // Show EDA
             showEDABtn.addEventListener('click', function() {
                 // Show loading indicator
                 edaLoading.classList.add('show');
@@ -640,6 +640,7 @@
                 
                 // Hide evaluation results
                 evaluationResults.classList.remove('show');
+                evaluationLoading.classList.remove('show');
             });
             
             // Make prediction
@@ -833,63 +834,36 @@
                 const confusionMatrixCtx = document.getElementById('confusionMatrixChart');
                 if (confusionMatrixCtx) {
                     new Chart(confusionMatrixCtx, {
-                        type: 'matrix',
+                        type: 'bar',
                         data: {
+                            labels: ['True Positive', 'False Positive', 'False Negative', 'True Negative'],
                             datasets: [{
-                                label: 'Confusion Matrix',
-                                data: [
-                                    {x: 'Actual On-Time', y: 'Predicted On-Time', v: 245},
-                                    {x: 'Actual On-Time', y: 'Predicted Delayed', v: 12},
-                                    {x: 'Actual Delayed', y: 'Predicted On-Time', v: 18},
-                                    {x: 'Actual Delayed', y: 'Predicted Delayed', v: 225}
+                                label: 'Count',
+                                data: [245, 12, 18, 225],
+                                backgroundColor: [
+                                    'rgba(46, 204, 113, 0.7)',
+                                    'rgba(231, 76, 60, 0.7)',
+                                    'rgba(241, 196, 15, 0.7)',
+                                    'rgba(52, 152, 219, 0.7)'
                                 ],
-                                backgroundColor: function(context) {
-                                    const value = context.dataset.data[context.dataIndex].v;
-                                    const alpha = value / 300;
-                                    return `rgba(52, 152, 219, ${alpha})`;
-                                },
-                                borderColor: 'rgba(52, 152, 219, 1)',
-                                borderWidth: 1,
-                                width: function(context) {
-                                    const chart = context.chart;
-                                    const area = chart.chartArea;
-                                    return (area.right - area.left) / 2 - 10;
-                                },
-                                height: function(context) {
-                                    const chart = context.chart;
-                                    const area = chart.chartArea;
-                                    return (area.bottom - area.top) / 2 - 10;
-                                }
+                                borderColor: [
+                                    'rgba(46, 204, 113, 1)',
+                                    'rgba(231, 76, 60, 1)',
+                                    'rgba(241, 196, 15, 1)',
+                                    'rgba(52, 152, 219, 1)'
+                                ],
+                                borderWidth: 1
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             scales: {
-                                x: {
-                                    type: 'category',
-                                    labels: ['Predicted On-Time', 'Predicted Delayed'],
-                                    title: {
-                                        display: true,
-                                        text: 'Predicted'
-                                    }
-                                },
                                 y: {
-                                    type: 'category',
-                                    labels: ['Actual Delayed', 'Actual On-Time'],
+                                    beginAtZero: true,
                                     title: {
                                         display: true,
-                                        text: 'Actual'
-                                    }
-                                }
-                            },
-                            plugins: {
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            const v = context.dataset.data[context.dataIndex].v;
-                                            return `Count: ${v}`;
-                                        }
+                                        text: 'Count'
                                     }
                                 }
                             }
