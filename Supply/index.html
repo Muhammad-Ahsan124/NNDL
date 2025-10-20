@@ -428,13 +428,20 @@
                 }, 1000);
             });
             
-            // Show EDA
+            // Show EDA - Fixed implementation
             showEDABtn.addEventListener('click', function() {
+                // Show loading indicator
                 edaLoading.classList.add('show');
                 
-                // Simulate EDA generation
+                // Hide any previous results
+                edaResults.classList.remove('show');
+                
+                // Simulate EDA generation with a delay
                 setTimeout(function() {
+                    // Hide loading indicator
                     edaLoading.classList.remove('show');
+                    
+                    // Show EDA results
                     edaResults.classList.add('show');
                     
                     // Initialize charts
@@ -444,11 +451,18 @@
             
             // Train model
             trainModelBtn.addEventListener('click', function() {
+                // Show loading indicator
                 trainingLoading.classList.add('show');
                 
-                // Simulate model training
+                // Hide any previous results
+                trainingResults.classList.remove('show');
+                
+                // Simulate model training with a delay
                 setTimeout(function() {
+                    // Hide loading indicator
                     trainingLoading.classList.remove('show');
+                    
+                    // Show training results
                     trainingResults.classList.add('show');
                     
                     // Initialize training chart
@@ -459,136 +473,133 @@
             // Initialize EDA Charts
             function initEDACharts() {
                 // Delivery Time Distribution Chart
-                const deliveryTimeCtx = document.getElementById('deliveryTimeChart').getContext('2d');
-                new Chart(deliveryTimeCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['1-2 days', '3-4 days', '5-6 days', '7-8 days', '9+ days'],
-                        datasets: [{
-                            label: 'Number of Deliveries',
-                            data: [320, 450, 280, 150, 47],
-                            backgroundColor: 'rgba(52, 152, 219, 0.7)',
-                            borderColor: 'rgba(52, 152, 219, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Number of Deliveries'
-                                }
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Delivery Time'
+                const deliveryTimeCtx = document.getElementById('deliveryTimeChart');
+                if (deliveryTimeCtx) {
+                    new Chart(deliveryTimeCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['1-2 days', '3-4 days', '5-6 days', '7-8 days', '9+ days'],
+                            datasets: [{
+                                label: 'Number of Deliveries',
+                                data: [320, 450, 280, 150, 47],
+                                backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                                borderColor: 'rgba(52, 152, 219, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Number of Deliveries'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Delivery Time'
+                                    }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+                }
                 
                 // Shipping Cost vs Delivery Time Chart
-                const costTimeCtx = document.getElementById('costTimeChart').getContext('2d');
-                new Chart(costTimeCtx, {
-                    type: 'scatter',
-                    data: {
-                        datasets: [{
-                            label: 'Shipping Cost vs Delivery Time',
-                            data: [
-                                {x: 45, y: 2},
-                                {x: 52, y: 3},
-                                {x: 38, y: 4},
-                                {x: 65, y: 1},
-                                {x: 72, y: 2},
-                                {x: 48, y: 5},
-                                {x: 55, y: 3},
-                                {x: 60, y: 2},
-                                {x: 42, y: 4},
-                                {x: 58, y: 3},
-                                {x: 50, y: 4},
-                                {x: 68, y: 1},
-                                {x: 45, y: 5},
-                                {x: 62, y: 2},
-                                {x: 53, y: 3}
-                            ],
-                            backgroundColor: 'rgba(46, 204, 113, 0.7)',
-                            borderColor: 'rgba(46, 204, 113, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Delivery Time (days)'
+                const costTimeCtx = document.getElementById('costTimeChart');
+                if (costTimeCtx) {
+                    new Chart(costTimeCtx, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [{
+                                label: 'Shipping Cost vs Delivery Time',
+                                data: [
+                                    {x: 45, y: 2}, {x: 52, y: 3}, {x: 38, y: 4},
+                                    {x: 65, y: 1}, {x: 72, y: 2}, {x: 48, y: 5},
+                                    {x: 55, y: 3}, {x: 60, y: 2}, {x: 42, y: 4},
+                                    {x: 58, y: 3}, {x: 50, y: 4}, {x: 68, y: 1},
+                                    {x: 45, y: 5}, {x: 62, y: 2}, {x: 53, y: 3}
+                                ],
+                                backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                                borderColor: 'rgba(46, 204, 113, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Delivery Time (days)'
+                                    },
+                                    beginAtZero: true
                                 },
-                                beginAtZero: true
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Shipping Cost ($)'
-                                },
-                                beginAtZero: true
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Shipping Cost ($)'
+                                    },
+                                    beginAtZero: true
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
             
             // Initialize Training Chart
             function initTrainingChart() {
-                const trainingCtx = document.getElementById('trainingChart').getContext('2d');
-                new Chart(trainingCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Epoch 1', 'Epoch 2', 'Epoch 3', 'Epoch 4', 'Epoch 5', 'Epoch 6', 'Epoch 7', 'Epoch 8', 'Epoch 9', 'Epoch 10'],
-                        datasets: [
-                            {
-                                label: 'Training Loss',
-                                data: [0.85, 0.65, 0.45, 0.32, 0.25, 0.18, 0.14, 0.11, 0.09, 0.087],
-                                borderColor: 'rgba(231, 76, 60, 1)',
-                                backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                                tension: 0.4
-                            },
-                            {
-                                label: 'Validation Loss',
-                                data: [0.88, 0.68, 0.48, 0.35, 0.28, 0.21, 0.17, 0.13, 0.10, 0.095],
-                                borderColor: 'rgba(52, 152, 219, 1)',
-                                backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                                tension: 0.4
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Loss'
+                const trainingCtx = document.getElementById('trainingChart');
+                if (trainingCtx) {
+                    new Chart(trainingCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Epoch 1', 'Epoch 2', 'Epoch 3', 'Epoch 4', 'Epoch 5', 
+                                     'Epoch 6', 'Epoch 7', 'Epoch 8', 'Epoch 9', 'Epoch 10'],
+                            datasets: [
+                                {
+                                    label: 'Training Loss',
+                                    data: [0.85, 0.65, 0.45, 0.32, 0.25, 0.18, 0.14, 0.11, 0.09, 0.087],
+                                    borderColor: 'rgba(231, 76, 60, 1)',
+                                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                                    tension: 0.4
                                 },
-                                beginAtZero: true
-                            },
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Epochs'
+                                {
+                                    label: 'Validation Loss',
+                                    data: [0.88, 0.68, 0.48, 0.35, 0.28, 0.21, 0.17, 0.13, 0.10, 0.095],
+                                    borderColor: 'rgba(52, 152, 219, 1)',
+                                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                                    tension: 0.4
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Loss'
+                                    },
+                                    beginAtZero: true
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Epochs'
+                                    }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
         });
     </script>
