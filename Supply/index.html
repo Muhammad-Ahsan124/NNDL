@@ -240,6 +240,51 @@
             color: #7f8c8d;
         }
         
+        .prediction-form {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .prediction-result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .prediction-result.show {
+            display: block;
+        }
+        
+        .prediction-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
         footer {
             text-align: center;
             margin-top: 40px;
@@ -255,6 +300,11 @@
             
             .actions {
                 flex-direction: column;
+            }
+            
+            .metrics {
+                flex-direction: column;
+                gap: 15px;
             }
         }
     </style>
@@ -383,6 +433,91 @@
                     <button class="btn btn-danger" id="evaluateModel" disabled>Evaluate Model</button>
                     <button class="btn" id="makePredictions" disabled>Make Predictions</button>
                 </div>
+                
+                <div class="loading" id="evaluationLoading">
+                    <div class="spinner"></div>
+                    <p>Evaluating model performance...</p>
+                </div>
+                
+                <div class="results" id="evaluationResults">
+                    <h3>Model Evaluation Results</h3>
+                    
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-value">92.5%</div>
+                            <div class="metric-label">Precision</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">91.8%</div>
+                            <div class="metric-label">Recall</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">92.1%</div>
+                            <div class="metric-label">F1-Score</div>
+                        </div>
+                    </div>
+                    
+                    <h4>Confusion Matrix</h4>
+                    <div class="chart-container">
+                        <canvas id="confusionMatrixChart"></canvas>
+                    </div>
+                    
+                    <h4>Feature Importance</h4>
+                    <div class="chart-container">
+                        <canvas id="featureImportanceChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="loading" id="predictionLoading">
+                    <div class="spinner"></div>
+                    <p>Processing prediction...</p>
+                </div>
+                
+                <div class="results" id="predictionResults">
+                    <h3>Make Predictions</h3>
+                    
+                    <div class="prediction-form">
+                        <div class="form-group">
+                            <label for="shippingCost">Shipping Cost ($)</label>
+                            <input type="number" id="shippingCost" min="0" step="0.01" placeholder="Enter shipping cost">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="distance">Distance (miles)</label>
+                            <input type="number" id="distance" min="0" placeholder="Enter distance">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="vehicleType">Vehicle Type</label>
+                            <select id="vehicleType">
+                                <option value="">Select vehicle type</option>
+                                <option value="truck">Truck</option>
+                                <option value="van">Van</option>
+                                <option value="motorcycle">Motorcycle</option>
+                                <option value="bicycle">Bicycle</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="weather">Weather Condition</label>
+                            <select id="weather">
+                                <option value="">Select weather condition</option>
+                                <option value="sunny">Sunny</option>
+                                <option value="rainy">Rainy</option>
+                                <option value="snowy">Snowy</option>
+                                <option value="foggy">Foggy</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn btn-success" id="predictButton">Predict Delivery Time</button>
+                    </div>
+                    
+                    <div class="prediction-result" id="predictionResult">
+                        <h4>Prediction Result</h4>
+                        <div class="prediction-value" id="predictedValue">3.2 days</div>
+                        <p>Based on the input parameters, the predicted delivery time is shown above.</p>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -401,10 +536,16 @@
             const trainModelBtn = document.getElementById('trainModel');
             const evaluateModelBtn = document.getElementById('evaluateModel');
             const makePredictionsBtn = document.getElementById('makePredictions');
+            const predictButton = document.getElementById('predictButton');
             const edaLoading = document.getElementById('edaLoading');
             const edaResults = document.getElementById('edaResults');
             const trainingLoading = document.getElementById('trainingLoading');
             const trainingResults = document.getElementById('trainingResults');
+            const evaluationLoading = document.getElementById('evaluationLoading');
+            const evaluationResults = document.getElementById('evaluationResults');
+            const predictionLoading = document.getElementById('predictionLoading');
+            const predictionResults = document.getElementById('predictionResults');
+            const predictionResult = document.getElementById('predictionResult');
             
             // File upload simulation
             fileUpload.addEventListener('click', function() {
@@ -468,6 +609,90 @@
                     // Initialize training chart
                     initTrainingChart();
                 }, 3000);
+            });
+            
+            // Evaluate model - FIXED
+            evaluateModelBtn.addEventListener('click', function() {
+                // Show loading indicator
+                evaluationLoading.classList.add('show');
+                
+                // Hide any previous results
+                evaluationResults.classList.remove('show');
+                predictionResults.classList.remove('show');
+                
+                // Simulate model evaluation with a delay
+                setTimeout(function() {
+                    // Hide loading indicator
+                    evaluationLoading.classList.remove('show');
+                    
+                    // Show evaluation results
+                    evaluationResults.classList.add('show');
+                    
+                    // Initialize evaluation charts
+                    initEvaluationCharts();
+                }, 2000);
+            });
+            
+            // Make predictions - FIXED
+            makePredictionsBtn.addEventListener('click', function() {
+                // Show prediction interface
+                predictionResults.classList.add('show');
+                
+                // Hide evaluation results
+                evaluationResults.classList.remove('show');
+            });
+            
+            // Make prediction
+            predictButton.addEventListener('click', function() {
+                // Show loading indicator
+                predictionLoading.classList.add('show');
+                predictionResult.classList.remove('show');
+                
+                // Get form values
+                const shippingCost = document.getElementById('shippingCost').value;
+                const distance = document.getElementById('distance').value;
+                const vehicleType = document.getElementById('vehicleType').value;
+                const weather = document.getElementById('weather').value;
+                
+                // Validate form
+                if (!shippingCost || !distance || !vehicleType || !weather) {
+                    alert('Please fill in all fields');
+                    predictionLoading.classList.remove('show');
+                    return;
+                }
+                
+                // Simulate prediction with a delay
+                setTimeout(function() {
+                    // Hide loading indicator
+                    predictionLoading.classList.remove('show');
+                    
+                    // Show prediction result
+                    predictionResult.classList.add('show');
+                    
+                    // Calculate prediction based on inputs (simplified)
+                    const baseTime = 2.5;
+                    const costFactor = shippingCost > 50 ? -0.5 : 0;
+                    const distanceFactor = distance / 100;
+                    const vehicleFactors = {
+                        'truck': 0.8,
+                        'van': 0.6,
+                        'motorcycle': 0.4,
+                        'bicycle': 1.2
+                    };
+                    const weatherFactors = {
+                        'sunny': 0,
+                        'rainy': 0.5,
+                        'snowy': 1.2,
+                        'foggy': 0.7
+                    };
+                    
+                    const predictedTime = baseTime + costFactor + distanceFactor + 
+                                         vehicleFactors[vehicleType] + weatherFactors[weather];
+                    
+                    // Update prediction result
+                    document.getElementById('predictedValue').textContent = 
+                        predictedTime.toFixed(1) + ' days';
+                }, 1500);
             });
             
             // Initialize EDA Charts
@@ -595,6 +820,110 @@
                                         display: true,
                                         text: 'Epochs'
                                     }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Initialize Evaluation Charts
+            function initEvaluationCharts() {
+                // Confusion Matrix Chart
+                const confusionMatrixCtx = document.getElementById('confusionMatrixChart');
+                if (confusionMatrixCtx) {
+                    new Chart(confusionMatrixCtx, {
+                        type: 'matrix',
+                        data: {
+                            datasets: [{
+                                label: 'Confusion Matrix',
+                                data: [
+                                    {x: 'Actual On-Time', y: 'Predicted On-Time', v: 245},
+                                    {x: 'Actual On-Time', y: 'Predicted Delayed', v: 12},
+                                    {x: 'Actual Delayed', y: 'Predicted On-Time', v: 18},
+                                    {x: 'Actual Delayed', y: 'Predicted Delayed', v: 225}
+                                ],
+                                backgroundColor: function(context) {
+                                    const value = context.dataset.data[context.dataIndex].v;
+                                    const alpha = value / 300;
+                                    return `rgba(52, 152, 219, ${alpha})`;
+                                },
+                                borderColor: 'rgba(52, 152, 219, 1)',
+                                borderWidth: 1,
+                                width: function(context) {
+                                    const chart = context.chart;
+                                    const area = chart.chartArea;
+                                    return (area.right - area.left) / 2 - 10;
+                                },
+                                height: function(context) {
+                                    const chart = context.chart;
+                                    const area = chart.chartArea;
+                                    return (area.bottom - area.top) / 2 - 10;
+                                }
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    type: 'category',
+                                    labels: ['Predicted On-Time', 'Predicted Delayed'],
+                                    title: {
+                                        display: true,
+                                        text: 'Predicted'
+                                    }
+                                },
+                                y: {
+                                    type: 'category',
+                                    labels: ['Actual Delayed', 'Actual On-Time'],
+                                    title: {
+                                        display: true,
+                                        text: 'Actual'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const v = context.dataset.data[context.dataIndex].v;
+                                            return `Count: ${v}`;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Feature Importance Chart
+                const featureImportanceCtx = document.getElementById('featureImportanceChart');
+                if (featureImportanceCtx) {
+                    new Chart(featureImportanceCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Distance', 'Shipping Cost', 'Vehicle Type', 'Weather', 'Season', 'Traffic'],
+                            datasets: [{
+                                label: 'Feature Importance',
+                                data: [0.32, 0.28, 0.18, 0.12, 0.06, 0.04],
+                                backgroundColor: 'rgba(46, 204, 113, 0.7)',
+                                borderColor: 'rgba(46, 204, 113, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Importance'
+                                    },
+                                    beginAtZero: true,
+                                    max: 0.35
                                 }
                             }
                         }
