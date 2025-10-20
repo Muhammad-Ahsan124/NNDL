@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmartChain: Supply Delay Predictor (Demo)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>SmartChain — Supply Delay Predictor</h1>
+    <p class="lead">Enter shipment features below and get a predicted probability of delay (demo model).</p>
+
+    <div class="form-grid" id="input-form">
+      <!-- Inputs will be injected by script.js -->
+    </div>
+
+    <div class="actions">
+      <button id="predictBtn">Predict Delay Probability</button>
+      <button id="fillSample">Fill Sample Row</button>
+    </div>
+
+    <div id="result" class="result-card" style="display:none;">
+      <h2>Prediction</h2>
+      <p id="probText"></p>
+      <div id="probBar" class="prob-bar"><div id="probFill"></div></div>
+      <p id="explain"></p>
+    </div>
+
+    <h3>Sample inputs (first 20 rows)</h3>
+    <pre id="sampleArea"></pre>
+
+    <footer>
+      <p>Model: logistic regression approximating a DNN demo. Designed for static GitHub Pages deployment.</p>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
